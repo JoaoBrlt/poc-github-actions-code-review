@@ -24,29 +24,22 @@ jobs:
               repo: context.repo.repo,
               pull_number: ${{ github.event.pull_request.number }},
             });
-            const pull_request_number = pull_request.data.number;
-            const pull_request_user_id = pull_request.data.user.id;
-            console.log("Pull request:", pull_request);
+            console.log("Pull request:", pull_request.data);
 
             // Get pull request reviews
             const reviews = await github.paginate(github.rest.pulls.listReviews, {
               owner: context.repo.owner,
               repo: context.repo.repo,
-              pull_number: pull_request_number,
+              pull_number: pull_request.data.number,
             });
             console.log("Reviews:", reviews);
 
             // Filter pull request reviews
+            const filtered_reviews = reviews.filter((review) => review.user.id !== pull_request.data.user.id);
+
+            // Get the latest review of each user
             const latest_review_by_user = new Map();
             for (const review of reviews) {
-              const review_user_id = review.user.id;
-            
-              // Ignore reviews from the author
-              if (review_user_id === pull_request_user_id) {
-                continue;
-              }
-            
-              // Keep only the latest review
               const previous_review = latest_review_by_user.get(review.user.id);
               if (previous_review == null) {
                 latest_review_by_user.set(review.user.id, review);
@@ -73,3 +66,11 @@ jobs:
             console.log("Commented:", commented_reviews);
             console.log("Changes requested:", changes_requested_reviews);
             console.log("Approved:", approved_reviews);
+            
+            // Get pull request review comments
+            const review_comments = await github.paginate(github.rest.pulls.listReviewComments, {
+              owner: context.repo.owner,
+              repo: context.repo.repo,
+              pull_number: pull_request.data.number,
+            });
+            console.log("Review comments:", review_comments);
