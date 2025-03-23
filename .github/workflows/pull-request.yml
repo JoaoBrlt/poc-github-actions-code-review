@@ -18,11 +18,20 @@ jobs:
         id: set-result
         with:
           script: |
+            const pullRequest = await github.rest.pulls.get({
+              owner: context.repo.owner,
+              repo: context.repo.repo,
+              pull_number: ${{ github.event.pull_request.number }},
+            });
+            console.log("Pull request:", pullRequest);
+            
             const reviews = await github.paginate(github.rest.pulls.listReviews, {
               owner: context.repo.owner,
               repo: context.repo.repo,
               pull_number: ${{ github.event.pull_request.number }},
             });
+            console.log("Reviews:", reviews);
+            
             const reviewsPerUser = new Map();
             for (const review of reviews) {
               const previousReviews = reviewsPerUser.get(review.user.id) ?? [];
