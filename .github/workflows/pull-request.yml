@@ -26,7 +26,6 @@ jobs:
               repo: context.repo.repo,
               pull_number: ${{ github.event.pull_request.number }},
             });
-            console.log("Pull request:", pull_request.data);
 
             // Get pull request reviews
             const reviews = await github.paginate(github.rest.pulls.listReviews, {
@@ -35,19 +34,27 @@ jobs:
               pull_number: pull_request.data.number,
             });
 
-            // Skip pull request reviews from the author
-            const filtered_reviews = reviews.filter((review) => review.user.id !== pull_request.data.user.id);
-
             // Get the latest review of each user
             const latest_review_by_user = new Map();
-            for (const review of filtered_reviews) {
+            for (const review of reviews) {
+              // Skip reviews from the author
+              if (review.user.id === pull_request.data.user.id) {
+                continue;
+              }
+
+              // Skip "Commented" reviews as they shouldn't affect the review decision
+              if (review.state === "COMMENTED") {
+                continue;
+              }
+
+              // Keep the latest review only
               const previous_review = latest_review_by_user.get(review.user.id);
               if (previous_review == null) {
                 latest_review_by_user.set(review.user.id, review);
               } else {
                 previous_review_date = Date.parse(previous_review.submitted_at);
                 current_review_date = Date.parse(review.submitted_at);
-            
+
                 if (current_review_date >= previous_review_date) {
                   latest_review_by_user.set(review.user.id, review);
                 }
@@ -60,15 +67,13 @@ jobs:
               const previous_reviews = reviews_by_state.get(review.state) ?? [];
               reviews_by_state.set(review.state, [...previous_reviews, review]);
             }
-            const commented_reviews = (reviews_by_state.get("COMMENTED") ?? []).length
-            const changes_requested_reviews = (reviews_by_state.get("CHANGES_REQUESTED") ?? []).length
             const approved_reviews = (reviews_by_state.get("APPROVED") ?? []).length
-            console.log("Commented reviews:", commented_reviews);
-            console.log("Changes requested reviews:", changes_requested_reviews);
+            const changes_requested_reviews = (reviews_by_state.get("CHANGES_REQUESTED") ?? []).length
             console.log("Approved reviews:", approved_reviews);
-            
+            console.log("Changes requested reviews:", changes_requested_reviews);
+
             // Count unresolved pull request review comments
-            let unresolvedReviewComments = 0;
+            let unresolved_review_comments = 0;
             const query = `query($owner: String!, $repo: String!, $pull_number: Int!, $cursor: String) {
               repository(owner: $owner, name: $repo) {
                 pullRequest(number: $pull_number) {
@@ -101,19 +106,26 @@ jobs:
                 pull_number: pull_request.data.number,
                 cursor: cursor
               })
-              console.log("Result:", result);
               for (const reviewThread of result.repository.pullRequest.reviewThreads.nodes) {
-                // Skip pull request review comments from the author
+                // Skip review comments from the author
                 if (reviewThread.comments.nodes[0].author.login === pull_request.data.user.login) {
                   continue;
                 }
                 
-                // Increment the count
+                // Check the resolve status
                 if (!reviewThread.isResolved) {
-                  unresolvedReviewComments++;
+                  unresolved_review_comments++;
                 }
               }
               hasNextPage = result.repository.pullRequest.reviewThreads.pageInfo.hasNextPage;
               cursor = result.repository.pullRequest.reviewThreads.pageInfo.endCursor;
             }
-            console.log("Unresolved review comments:", unresolvedReviewComments);
+            console.log("Unresolved review comments:", unresolved_review_comments);
+
+            if (approved_reviews >= 2 && changes_requested_reviews === 0 && unresolved_review_comments === 0) {
+              console.log("Review: Approved");
+            } else if (changes_requested_reviews > 0 || unresolved_review_comments > 0) {
+              console.log("Review: Changes requested");
+            } else {
+              console.log("Review: Pending");
+            }
