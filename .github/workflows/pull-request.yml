@@ -67,4 +67,9 @@ jobs:
               const previous_reviews = reviews_by_state.get(review.state) ?? [];
               reviews_by_state.set(review.state, [...previous_reviews, review]);
             }
-            console.log("Reviews by state:", reviews_by_state);
+            const commented_reviews = (reviews_by_state.get("COMMENTED") ?? []).length
+            const changes_requested_reviews = (reviews_by_state.get("CHANGES_REQUESTED") ?? []).length
+            const approved_reviews = (reviews_by_state.get("APPROVED") ?? []).length
+            console.log("Commented:", commented_reviews);
+            console.log("Changes requested:", changes_requested_reviews);
+            console.log("Approved:", approved_reviews);
