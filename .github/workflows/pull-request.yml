@@ -1,11 +1,13 @@
 name: Pull Request
 
 on:
-  # When a pull request is opened, synchronized or reopened
+  # When a pull request is opened, synchronized, or reopened
   pull_request_target:
+    types: ["opened", "synchronize", "reopened"]
 
-  # When a pull request review is submitted, edited or dismissed
+  # When a pull request review is submitted, edited, or dismissed
   pull_request_review:
+    types: ["submitted", "edited", "dismissed"]
 
 jobs:
   label:
@@ -32,14 +34,13 @@ jobs:
               repo: context.repo.repo,
               pull_number: pull_request.data.number,
             });
-            console.log("Reviews:", reviews);
 
-            // Filter pull request reviews
+            // Skip pull request reviews from the author
             const filtered_reviews = reviews.filter((review) => review.user.id !== pull_request.data.user.id);
 
             // Get the latest review of each user
             const latest_review_by_user = new Map();
-            for (const review of reviews) {
+            for (const review of filtered_reviews) {
               const previous_review = latest_review_by_user.get(review.user.id);
               if (previous_review == null) {
                 latest_review_by_user.set(review.user.id, review);
@@ -52,7 +53,6 @@ jobs:
                 }
               }
             }
-            console.log("Latest review by user:", latest_review_by_user);
 
             // Group pull request reviews by state
             const reviews_by_state = new Map();
@@ -63,14 +63,57 @@ jobs:
             const commented_reviews = (reviews_by_state.get("COMMENTED") ?? []).length
             const changes_requested_reviews = (reviews_by_state.get("CHANGES_REQUESTED") ?? []).length
             const approved_reviews = (reviews_by_state.get("APPROVED") ?? []).length
-            console.log("Commented:", commented_reviews);
-            console.log("Changes requested:", changes_requested_reviews);
-            console.log("Approved:", approved_reviews);
+            console.log("Commented reviews:", commented_reviews);
+            console.log("Changes requested reviews:", changes_requested_reviews);
+            console.log("Approved reviews:", approved_reviews);
             
-            // Get pull request review comments
-            const review_comments = await github.paginate(github.rest.pulls.listReviewComments, {
-              owner: context.repo.owner,
-              repo: context.repo.repo,
-              pull_number: pull_request.data.number,
-            });
-            console.log("Review comments:", review_comments);
+            // Count unresolved pull request review comments
+            let unresolvedReviewComments = 0;
+            const query = `query($owner: String!, $repo: String!, $pull_number: Int!, $cursor: String) {
+              repository(owner: $owner, name: $repo) {
+                pullRequest(number: $pull_number) {
+                  reviewThreads(first: 100, after: $cursor) {
+                    nodes {
+                      id
+                      isResolved
+                      comments(first: 1) {
+                        nodes {
+                          author {
+                            login
+                          }
+                        }  
+                      }
+                    }
+                    pageInfo {
+                      hasNextPage
+                      endCursor
+                    }
+                  }
+                }
+              }
+            }`;
+            let hasNextPage = true;
+            let cursor = null;
+            while (hasNextPage) {
+              const result = await github.graphql(query, {
+                owner: context.repo.owner,
+                repo: context.repo.repo,
+                pull_number: pull_request.data.number,
+                cursor: cursor
+              })
+              console.log("Result:", result);
+              for (const reviewThread of result.repository.pullRequest.reviewThreads.nodes) {
+                // Skip pull request review comments from the author
+                if (reviewThread.comments.nodes[0].author.login === pull_request.data.user.login) {
+                  continue;
+                }
+                
+                // Increment the count
+                if (!reviewThread.isResolved) {
+                  unresolvedReviewComments++;
+                }
+              }
+              hasNextPage = result.repository.pullRequest.reviewThreads.pageInfo.hasNextPage;
+              cursor = result.repository.pullRequest.reviewThreads.pageInfo.endCursor;
+            }
+            console.log("Unresolved review comments:", unresolvedReviewComments);
