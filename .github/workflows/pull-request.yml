@@ -28,7 +28,7 @@ jobs:
             const pull_request_user_id = pull_request.data.user.id;
             console.log("Pull request:", pull_request);
 
-            // Get the pull request reviews
+            // Get pull request reviews
             const reviews = await github.paginate(github.rest.pulls.listReviews, {
               owner: context.repo.owner,
               repo: context.repo.repo,
@@ -36,25 +36,35 @@ jobs:
             });
             console.log("Reviews:", reviews);
 
-            // Filter the pull request reviews
-            const reviews_per_user = new Map();
+            // Filter pull request reviews
+            const latest_review_by_user = new Map();
             for (const review of reviews) {
               const review_user_id = review.user.id;
             
+              // Ignore reviews from the author
               if (review_user_id === pull_request_user_id) {
                 continue;
               }
             
-              const previous_review = reviews_per_user.get(review.user.id);
+              // Keep only the latest review
+              const previous_review = latest_review_by_user.get(review.user.id);
               if (previous_review == null) {
-                reviews_per_user.set(review.user.id, review);
+                latest_review_by_user.set(review.user.id, review);
               } else {
                 previous_review_date = Date.parse(previous_review.submitted_at);
                 current_review_date = Date.parse(review.submitted_at);
             
                 if (current_review_date >= previous_review_date) {
-                  reviews_per_user.set(review.user.id, review);
+                  latest_review_by_user.set(review.user.id, review);
                 }
               }
             }
-            console.log("Reviews per user:", reviews_per_user);
+            console.log("Latest review by user:", latest_review_by_user);
+
+            // Group pull request reviews by state
+            const reviews_by_state = new Map();
+            for (const review of latest_review_by_user.values()) {
+              const previous_reviews = reviews_by_state.get(review.state) ?? [];
+              reviews_by_state.set(review.state, [...previous_reviews, review]);
+            }
+            console.log("Reviews by state:", reviews_by_state);
