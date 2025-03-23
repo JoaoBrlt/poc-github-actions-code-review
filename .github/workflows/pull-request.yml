@@ -23,4 +23,9 @@ jobs:
               repo: context.repo.repo,
               pull_number: ${{ github.event.pull_request.number }},
             });
-            console.log("Paginated reviews:", reviews);
+            const reviewsPerUser = new Map();
+            for (const review of reviews) {
+              const previousReviews = reviewsPerUser.get(review.user.id) ?? [];
+              reviewsPerUser.set(review.user.id, [...previousReviews, review]);
+            }
+            console.log("Reviews per user:", reviewsPerUser);
