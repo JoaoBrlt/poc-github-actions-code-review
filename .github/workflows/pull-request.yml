@@ -18,23 +18,43 @@ jobs:
         id: set-result
         with:
           script: |
-            const pullRequest = await github.rest.pulls.get({
+            // Get the pull request
+            const pull_request = await github.rest.pulls.get({
               owner: context.repo.owner,
               repo: context.repo.repo,
               pull_number: ${{ github.event.pull_request.number }},
             });
-            console.log("Pull request:", pullRequest);
-            
+            const pull_request_number = pull_request.data.number;
+            const pull_request_user_id = pull_request.data.user.id;
+            console.log("Pull request:", pull_request);
+
+            // Get the pull request reviews
             const reviews = await github.paginate(github.rest.pulls.listReviews, {
               owner: context.repo.owner,
               repo: context.repo.repo,
-              pull_number: ${{ github.event.pull_request.number }},
+              pull_number: pull_request_number,
             });
             console.log("Reviews:", reviews);
-            
-            const reviewsPerUser = new Map();
+
+            // Filter the pull request reviews
+            const reviews_per_user = new Map();
             for (const review of reviews) {
-              const previousReviews = reviewsPerUser.get(review.user.id) ?? [];
-              reviewsPerUser.set(review.user.id, [...previousReviews, review]);
+              const review_user_id = review.user.id;
+            
+              if (review_user_id === pull_request_user_id) {
+                continue;
+              }
+            
+              const previous_review = reviews_per_user.get(review.user.id);
+              if (previous_review == null) {
+                reviews_per_user.set(review.user.id, review);
+              } else {
+                previous_review_date = Date.parse(previous_review.submitted_at);
+                current_review_date = Date.parse(review.submitted_at);
+            
+                if (current_review_date >= previous_review_date) {
+                  reviews_per_user.set(review.user.id, review);
+                }
+              }
             }
-            console.log("Reviews per user:", reviewsPerUser);
+            console.log("Reviews per user:", reviews_per_user);
