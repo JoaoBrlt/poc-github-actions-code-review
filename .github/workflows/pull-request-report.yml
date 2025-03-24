@@ -17,6 +17,8 @@ jobs:
     steps:
       - name: Run script
         uses: actions/github-script@v7
+        env:
+          SLACK_WEBHOOK_URL: ${{ secrets.SLACK_WEBHOOK_URL }}
         with:
           script: |
             // Get all pull requests
@@ -39,3 +41,23 @@ jobs:
             // Find approved pull requests
             const approved_pull_requests = pull_requests.filter((pull_request) => pull_request.labels.some((label) => label.name === process.env.APPROVED_LABEL));
             console.log("Approved pull requests:", approved_pull_requests);
+            
+            // Build the Slack message
+            const message = {
+              text: "Hello, world!",
+            };
+            
+            // Send the Slack message
+            fetch(process.env.SLACK_WEBHOOK_URL, {
+              method: "POST",
+              headers: { "Content-Type": "application/json" },
+              body: JSON.stringify(message),
+            })
+              .then((response) => {
+                if (!response.ok) {
+                  throw new Error(`Invalid response: ${response.statusText}`);
+                }
+                return response.text();
+              })
+              .then((data) => console.log("Successfully sent the message:", data))
+              .catch((error) => console.error("Unable to send the message:", error));
