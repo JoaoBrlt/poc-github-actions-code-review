@@ -1,4 +1,4 @@
-name: Pull Request
+name: Pull Request - Label
 
 on:
   # When manually triggered
