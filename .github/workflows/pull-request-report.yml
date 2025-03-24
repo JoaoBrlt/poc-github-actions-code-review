@@ -44,7 +44,7 @@ jobs:
             
             // Build the Slack message
             const message = {
-              text: "Hello, world!",
+              text: ":loudspeaker: **Daily Code Review Recap** :loudspeaker:\n",
             };
             
             // Send the Slack message
