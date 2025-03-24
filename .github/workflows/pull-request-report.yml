@@ -92,6 +92,13 @@ jobs:
                 }
               ]
             });
+            blocks.push({
+              type: "section",
+              text: {
+                type: "mrkdwn",
+                text: ":pencil2: *Changes requested*"
+              }
+            });
             const changes_requested_list_items = [];
             for (const pull_request of changes_requested_pull_requests) {
               changes_requested_list_items.push({
@@ -125,6 +132,13 @@ jobs:
                   elements: changes_requested_list_items
                 }
               ]
+            });
+            blocks.push({
+              type: "section",
+              text: {
+                type: "mrkdwn",
+                text: ":white_check_mark: *Approved*"
+              }
             });
             const approved_list_items = [];
             for (const pull_request of approved_pull_requests) {
