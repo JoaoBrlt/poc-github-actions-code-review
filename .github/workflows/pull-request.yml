@@ -23,9 +23,9 @@ permissions:
 env:
   PULL_REQUEST_NUMBER: ${{ inputs.pull_request_number || github.event.pull_request.number }}
   REQUIRED_REVIEW_APPROVALS: 1
-  APPROVED_LABEL: "Review: Approved"
-  CHANGES_REQUESTED_LABEL: "Review: Changes requested"
   PENDING_REVIEW_LABEL: "Review: Pending"
+  CHANGES_REQUESTED_LABEL: "Review: Changes requested"
+  APPROVED_LABEL: "Review: Approved"
 
 jobs:
   label:
