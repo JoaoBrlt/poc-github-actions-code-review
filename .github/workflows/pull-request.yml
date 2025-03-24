@@ -19,7 +19,10 @@ on:
 
 env:
   PULL_REQUEST_NUMBER: ${{ inputs.pull_request_number || github.event.pull_request.number }}
-  REQUIRED_REVIEW_APPROVALS: 2
+  MINIMUM_REVIEW_APPROVALS: 2
+  APPROVED_LABEL: "Review: Approved"
+  CHANGES_REQUESTED_LABEL: "Review: Changes requested"
+  PENDING_REVIEW_LABEL: "Review: Pending"
 
 jobs:
   label:
@@ -133,10 +136,88 @@ jobs:
             }
             console.log("Unresolved review comments:", unresolved_review_comments);
 
-            if (approved_reviews >= process.env.REQUIRED_REVIEW_APPROVALS && changes_requested_reviews === 0 && unresolved_review_comments === 0) {
-              console.log("Review: Approved");
+            // Get pull request labels
+            const labels = await github.paginate(github.rest.issues.listLabelsOnIssue, {
+              owner: context.repo.owner,
+              repo: context.repo.repo,
+              issue_number: pull_request.data.number,
+            });
+            
+            if (approved_reviews >= process.env.MINIMUM_REVIEW_APPROVALS && changes_requested_reviews === 0 && unresolved_review_comments === 0) {
+               if (labels.includes(process.env.PENDING_REVIEW_LABEL)) {
+                await github.rest.issues.removeLabel({
+                  owner: context.repo.owner,
+                  repo: context.repo.repo,
+                  issue_number: pull_request.data.number,
+                  name: process.env.PENDING_REVIEW_LABEL,
+                });
+              }
+              if (labels.includes(process.env.CHANGES_REQUESTED_LABEL)) {
+                await github.rest.issues.removeLabel({
+                  owner: context.repo.owner,
+                  repo: context.repo.repo,
+                  issue_number: pull_request.data.number,
+                  name: process.env.CHANGES_REQUESTED_LABEL,
+                });
+              }
+              if (!labels.includes(process.env.APPROVED_LABEL)) {
+                await github.rest.issues.addLabels({
+                  owner: context.repo.owner,
+                  repo: context.repo.repo,
+                  issue_number: pull_request.data.number,
+                  labels: [process.env.APPROVED_LABEL],
+                });
+              }
             } else if (changes_requested_reviews > 0 || unresolved_review_comments > 0) {
               console.log("Review: Changes requested");
+              if (labels.includes(process.env.PENDING_REVIEW_LABEL)) {
+                await github.rest.issues.removeLabel({
+                  owner: context.repo.owner,
+                  repo: context.repo.repo,
+                  issue_number: pull_request.data.number,
+                  name: process.env.PENDING_REVIEW_LABEL,
+                });
+              }
+              if (!labels.includes(process.env.CHANGES_REQUESTED_LABEL)) {
+                await github.rest.issues.addLabels({
+                  owner: context.repo.owner,
+                  repo: context.repo.repo,
+                  issue_number: pull_request.data.number,
+                  labels: [process.env.CHANGES_REQUESTED_LABEL],
+                });
+              }
+              if (labels.includes(process.env.APPROVED_LABEL)) {
+                await github.rest.issues.removeLabel({
+                  owner: context.repo.owner,
+                  repo: context.repo.repo,
+                  issue_number: pull_request.data.number,
+                  name: process.env.APPROVED_LABEL,
+                });
+              }
             } else {
               console.log("Review: Pending");
+              if (!labels.includes(process.env.PENDING_REVIEW_LABEL)) {
+                await github.rest.issues.addLabels({
+                  owner: context.repo.owner,
+                  repo: context.repo.repo,
+                  issue_number: pull_request.data.number,
+                  labels: [process.env.PENDING_REVIEW_LABEL],
+                });
+              }
+              if (labels.includes(process.env.CHANGES_REQUESTED_LABEL)) {
+                await github.rest.issues.removeLabel({
+                  owner: context.repo.owner,
+                  repo: context.repo.repo,
+                  issue_number: pull_request.data.number,
+                  name: process.env.CHANGES_REQUESTED_LABEL,
+                });
+              }
+              if (labels.includes(process.env.APPROVED_LABEL)) {
+                await github.rest.issues.removeLabel({
+                  owner: context.repo.owner,
+                  repo: context.repo.repo,
+                  issue_number: pull_request.data.number,
+                  name: process.env.APPROVED_LABEL,
+                });
+              }
             }
