@@ -43,15 +43,34 @@ jobs:
             console.log("Approved pull requests:", approved_pull_requests);
             
             // Build the Slack message
-            const message = {
-              text: ":loudspeaker: **Daily Code Review Recap** :loudspeaker:\n",
-            };
+            let message = ":loudspeaker: *Daily Code Review Recap* :loudspeaker:\n";
+            message += "\n:eyes: *Pending*\n"
+            for (const pull_request of pending_pull_requests) {
+              message += "- " + pull_request.title + " ([#" + pull_request.number + "](" + pull_request.url + "))\n";
+            }
+            if (pending_pull_requests.length === 0) {
+              message += "None\n";
+            }
+            message += "\n:pencil2: *Changes requested*\n"
+            for (const pull_request of changes_requested_pull_requests) {
+              message += "- " + pull_request.title + " ([#" + pull_request.number + "](" + pull_request.url + "))\n";
+            }
+            if (changes_requested_pull_requests.length === 0) {
+              message += "None\n";
+            }
+            message += "\n:white_check_mark: *Approved*\n"
+            for (const pull_request of approved_pull_requests) {
+              message += "- " + pull_request.title + " ([#" + pull_request.number + "](" + pull_request.url + "))\n";
+            }
+            if (approved_pull_requests.length === 0) {
+              message += "None\n";
+            }
             
             // Send the Slack message
             fetch(process.env.SLACK_WEBHOOK_URL, {
               method: "POST",
               headers: { "Content-Type": "application/json" },
-              body: JSON.stringify(message),
+              body: JSON.stringify({ text: message }),
             })
               .then((response) => {
                 if (!response.ok) {
