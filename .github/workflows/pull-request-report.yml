@@ -43,34 +43,182 @@ jobs:
             console.log("Approved pull requests:", approved_pull_requests);
             
             // Build the Slack message
-            let message = ":loudspeaker: *Daily Code Review Recap* :loudspeaker:\n";
-            message += "\n:eyes: *Pending*\n"
-            for (const pull_request of pending_pull_requests) {
-              message += "* " + pull_request.title + " (<" + pull_request.url + "|#" + pull_request.number + ">)\n";
-            }
-            if (pending_pull_requests.length === 0) {
-              message += "None\n";
-            }
-            message += "\n:pencil2: *Changes requested*\n"
-            for (const pull_request of changes_requested_pull_requests) {
-              message += "* " + pull_request.title + " (<" + pull_request.url + "|#" + pull_request.number + ">)\n";
-            }
-            if (changes_requested_pull_requests.length === 0) {
-              message += "None\n";
-            }
-            message += "\n:white_check_mark: *Approved*\n"
-            for (const pull_request of approved_pull_requests) {
-              message += "* " + pull_request.title + " (<" + pull_request.url + "|#" + pull_request.number + ">)\n";
-            }
-            if (approved_pull_requests.length === 0) {
-              message += "None\n";
+            const message = {
+              "blocks": [
+                {
+                  "type": "section",
+                  "text": {
+                    "type": "mrkdwn",
+                    "text": ":loudspeaker: *Daily Code Review Recap* :loudspeaker:"
+                  }
+                },
+                {
+                  "type": "section",
+                  "text": {
+                    "type": "mrkdwn",
+                    "text": ":eyes: *Pending*"
+                  }
+                },
+                {
+                  "type": "rich_text",
+                  "elements": [
+                    {
+                      "type": "rich_text_list",
+                      "style": "bullet",
+                      "indent": 0,
+                      "elements": [
+                        {
+                          "type": "rich_text_section",
+                          "elements": [
+                            {
+                              "type": "link",
+                              "url": "https://example.com/",
+                              "text": "ABC-001"
+                            },
+                            {
+                              "type": "text",
+                              "text": " Some pull request ("
+                            },
+                            {
+                              "type": "link",
+                              "url": "https://example.com/",
+                              "text": "#123"
+                            },
+                            {
+                              "type": "text",
+                              "text": ") - by "
+                            },
+                            {
+                              "type": "link",
+                              "url": "https://example.com/",
+                              "text": "@JoaoBrlt"
+                            }
+                          ]
+                        },
+                        {
+                          "type": "rich_text_section",
+                          "elements": [
+                            {
+                              "type": "link",
+                              "url": "https://example.com/",
+                              "text": "ABC-001"
+                            },
+                            {
+                              "type": "text",
+                              "text": " Some pull request ("
+                            },
+                            {
+                              "type": "link",
+                              "url": "https://example.com/",
+                              "text": "#123"
+                            },
+                            {
+                              "type": "text",
+                              "text": ") - by "
+                            },
+                            {
+                              "type": "link",
+                              "url": "https://example.com/",
+                              "text": "@JoaoBrlt"
+                            }
+                          ]
+                        },
+                        {
+                          "type": "rich_text_section",
+                          "elements": [
+                            {
+                              "type": "link",
+                              "url": "https://example.com/",
+                              "text": "ABC-001"
+                            },
+                            {
+                              "type": "text",
+                              "text": " Some pull request ("
+                            },
+                            {
+                              "type": "link",
+                              "url": "https://example.com/",
+                              "text": "#123"
+                            },
+                            {
+                              "type": "text",
+                              "text": ") - by "
+                            },
+                            {
+                              "type": "link",
+                              "url": "https://example.com/",
+                              "text": "@JoaoBrlt"
+                            }
+                          ]
+                        }
+                      ]
+                    }
+                  ]
+                },
+                {
+                  "type": "section",
+                  "text": {
+                    "type": "mrkdwn",
+                    "text": ":pencil2: *Changes requested*"
+                  }
+                },
+                {
+                  "type": "rich_text",
+                  "elements": [
+                    {
+                      "type": "rich_text_list",
+                      "style": "bullet",
+                      "indent": 0,
+                      "elements": [
+                        {
+                          "type": "rich_text_section",
+                          "elements": [
+                            {
+                              "type": "text",
+                              "text": "None"
+                            }
+                          ]
+                        }
+                      ]
+                    }
+                  ]
+                },
+                {
+                  "type": "section",
+                  "text": {
+                    "type": "mrkdwn",
+                    "text": ":white_check_mark: *Approved*"
+                  }
+                },
+                {
+                  "type": "rich_text",
+                  "elements": [
+                    {
+                      "type": "rich_text_list",
+                      "style": "bullet",
+                      "indent": 0,
+                      "elements": [
+                        {
+                          "type": "rich_text_section",
+                          "elements": [
+                            {
+                              "type": "text",
+                              "text": "None"
+                            }
+                          ]
+                        }
+                      ]
+                    }
+                  ]
+                }
+              ]
             }
             
             // Send the Slack message
             fetch(process.env.SLACK_WEBHOOK_URL, {
               method: "POST",
               headers: { "Content-Type": "application/json" },
-              body: JSON.stringify({ text: message }),
+              body: JSON.stringify(message),
             })
               .then((response) => {
                 if (!response.ok) {
