@@ -59,23 +59,13 @@ jobs:
                 continue;
               }
 
-              // Skip "Commented" reviews as they shouldn't affect the review decision
+              // Skip "Commented" reviews as they are handled differently
               if (review.state === "COMMENTED") {
                 continue;
               }
 
-              // Keep the latest review only
-              const previous_review = latest_review_by_user.get(review.user.id);
-              if (previous_review == null) {
-                latest_review_by_user.set(review.user.id, review);
-              } else {
-                previous_review_date = Date.parse(previous_review.submitted_at);
-                current_review_date = Date.parse(review.submitted_at);
-
-                if (current_review_date >= previous_review_date) {
-                  latest_review_by_user.set(review.user.id, review);
-                }
-              }
+              // Always keep the latest review
+              latest_review_by_user.set(review.user.id, review);
             }
 
             // Group pull request reviews by state
