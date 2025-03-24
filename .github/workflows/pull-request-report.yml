@@ -46,21 +46,21 @@ jobs:
             let message = ":loudspeaker: *Daily Code Review Recap* :loudspeaker:\n";
             message += "\n:eyes: *Pending*\n"
             for (const pull_request of pending_pull_requests) {
-              message += "- " + pull_request.title + " ([#" + pull_request.number + "](" + pull_request.url + "))\n";
+              message += "- " + pull_request.title + " (<" + pull_request.url + "|#" + pull_request.number + ">)\n";
             }
             if (pending_pull_requests.length === 0) {
               message += "None\n";
             }
             message += "\n:pencil2: *Changes requested*\n"
             for (const pull_request of changes_requested_pull_requests) {
-              message += "- " + pull_request.title + " ([#" + pull_request.number + "](" + pull_request.url + "))\n";
+              message += "- " + pull_request.title + " (<" + pull_request.url + "|#" + pull_request.number + ">)\n";
             }
             if (changes_requested_pull_requests.length === 0) {
               message += "None\n";
             }
             message += "\n:white_check_mark: *Approved*\n"
             for (const pull_request of approved_pull_requests) {
-              message += "- " + pull_request.title + " ([#" + pull_request.number + "](" + pull_request.url + "))\n";
+              message += "- " + pull_request.title + " (<" + pull_request.url + "|#" + pull_request.number + ">)\n";
             }
             if (approved_pull_requests.length === 0) {
               message += "None\n";
