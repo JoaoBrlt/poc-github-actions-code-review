@@ -17,6 +17,9 @@ on:
   pull_request_review:
     types: ["submitted", "edited", "dismissed"]
 
+permissions:
+  pull-requests: write # To be able to update pull request labels
+
 env:
   PULL_REQUEST_NUMBER: ${{ inputs.pull_request_number || github.event.pull_request.number }}
   MINIMUM_REVIEW_APPROVALS: 2
@@ -142,9 +145,10 @@ jobs:
               repo: context.repo.repo,
               issue_number: pull_request.data.number,
             });
+            const labelNames = labels.map((label) => label.name);
             
             if (approved_reviews >= process.env.MINIMUM_REVIEW_APPROVALS && changes_requested_reviews === 0 && unresolved_review_comments === 0) {
-               if (labels.includes(process.env.PENDING_REVIEW_LABEL)) {
+               if (labelNames.includes(process.env.PENDING_REVIEW_LABEL)) {
                 await github.rest.issues.removeLabel({
                   owner: context.repo.owner,
                   repo: context.repo.repo,
@@ -152,7 +156,7 @@ jobs:
                   name: process.env.PENDING_REVIEW_LABEL,
                 });
               }
-              if (labels.includes(process.env.CHANGES_REQUESTED_LABEL)) {
+              if (labelNames.includes(process.env.CHANGES_REQUESTED_LABEL)) {
                 await github.rest.issues.removeLabel({
                   owner: context.repo.owner,
                   repo: context.repo.repo,
@@ -160,7 +164,7 @@ jobs:
                   name: process.env.CHANGES_REQUESTED_LABEL,
                 });
               }
-              if (!labels.includes(process.env.APPROVED_LABEL)) {
+              if (!labelNames.includes(process.env.APPROVED_LABEL)) {
                 await github.rest.issues.addLabels({
                   owner: context.repo.owner,
                   repo: context.repo.repo,
@@ -170,7 +174,7 @@ jobs:
               }
             } else if (changes_requested_reviews > 0 || unresolved_review_comments > 0) {
               console.log("Review: Changes requested");
-              if (labels.includes(process.env.PENDING_REVIEW_LABEL)) {
+              if (labelNames.includes(process.env.PENDING_REVIEW_LABEL)) {
                 await github.rest.issues.removeLabel({
                   owner: context.repo.owner,
                   repo: context.repo.repo,
@@ -178,7 +182,7 @@ jobs:
                   name: process.env.PENDING_REVIEW_LABEL,
                 });
               }
-              if (!labels.includes(process.env.CHANGES_REQUESTED_LABEL)) {
+              if (!labelNames.includes(process.env.CHANGES_REQUESTED_LABEL)) {
                 await github.rest.issues.addLabels({
                   owner: context.repo.owner,
                   repo: context.repo.repo,
@@ -186,7 +190,7 @@ jobs:
                   labels: [process.env.CHANGES_REQUESTED_LABEL],
                 });
               }
-              if (labels.includes(process.env.APPROVED_LABEL)) {
+              if (labelNames.includes(process.env.APPROVED_LABEL)) {
                 await github.rest.issues.removeLabel({
                   owner: context.repo.owner,
                   repo: context.repo.repo,
@@ -196,7 +200,7 @@ jobs:
               }
             } else {
               console.log("Review: Pending");
-              if (!labels.includes(process.env.PENDING_REVIEW_LABEL)) {
+              if (!labelNames.includes(process.env.PENDING_REVIEW_LABEL)) {
                 await github.rest.issues.addLabels({
                   owner: context.repo.owner,
                   repo: context.repo.repo,
@@ -204,7 +208,7 @@ jobs:
                   labels: [process.env.PENDING_REVIEW_LABEL],
                 });
               }
-              if (labels.includes(process.env.CHANGES_REQUESTED_LABEL)) {
+              if (labelNames.includes(process.env.CHANGES_REQUESTED_LABEL)) {
                 await github.rest.issues.removeLabel({
                   owner: context.repo.owner,
                   repo: context.repo.repo,
@@ -212,7 +216,7 @@ jobs:
                   name: process.env.CHANGES_REQUESTED_LABEL,
                 });
               }
-              if (labels.includes(process.env.APPROVED_LABEL)) {
+              if (labelNames.includes(process.env.APPROVED_LABEL)) {
                 await github.rest.issues.removeLabel({
                   owner: context.repo.owner,
                   repo: context.repo.repo,
