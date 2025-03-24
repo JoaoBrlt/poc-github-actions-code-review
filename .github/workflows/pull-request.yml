@@ -22,7 +22,7 @@ permissions:
 
 env:
   PULL_REQUEST_NUMBER: ${{ inputs.pull_request_number || github.event.pull_request.number }}
-  MINIMUM_REVIEW_APPROVALS: 2
+  REQUIRED_REVIEW_APPROVALS: 1
   APPROVED_LABEL: "Review: Approved"
   CHANGES_REQUESTED_LABEL: "Review: Changes requested"
   PENDING_REVIEW_LABEL: "Review: Pending"
@@ -147,7 +147,7 @@ jobs:
             });
             const labelNames = labels.map((label) => label.name);
             
-            if (approved_reviews >= process.env.MINIMUM_REVIEW_APPROVALS && changes_requested_reviews === 0 && unresolved_review_comments === 0) {
+            if (approved_reviews >= process.env.REQUIRED_REVIEW_APPROVALS && changes_requested_reviews === 0 && unresolved_review_comments === 0) {
                if (labelNames.includes(process.env.PENDING_REVIEW_LABEL)) {
                 await github.rest.issues.removeLabel({
                   owner: context.repo.owner,
