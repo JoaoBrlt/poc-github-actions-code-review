@@ -29,22 +29,18 @@ jobs:
               sort: "created",
               direction: "asc",
             });
-            console.log("Pull requests:", JSON.stringify(pull_requests, null, 2));
             
             // Ignore draft pull requests
             const filtered_pull_requests = pull_requests.filter((pull_request) => !pull_request.draft);
 
             // Find pending pull requests
             const pending_pull_requests = filtered_pull_requests.filter((pull_request) => pull_request.labels.some((label) => label.name === process.env.PENDING_REVIEW_LABEL));
-            console.log("Pending pull requests:", pending_pull_requests);
             
             // Find changes requested pull requests
             const changes_requested_pull_requests = filtered_pull_requests.filter((pull_request) => pull_request.labels.some((label) => label.name === process.env.CHANGES_REQUESTED_LABEL));
-            console.log("Changes requested pull requests:", changes_requested_pull_requests);
         
             // Find approved pull requests
             const approved_pull_requests = filtered_pull_requests.filter((pull_request) => pull_request.labels.some((label) => label.name === process.env.APPROVED_LABEL));
-            console.log("Approved pull requests:", approved_pull_requests);
             
             // Build the Slack message
             const blocks = [];
