@@ -31,17 +31,29 @@ jobs:
             });
             console.log("Pull requests:", JSON.stringify(pull_requests, null, 2));
             
+            // Ignore draft pull requests
             const filtered_pull_requests = pull_requests.filter((pull_request) => !pull_request.draft);
             
-            // Fetch pull requests one by one to get the merge state
+            // Fetch pull requests one by one to get the mergeable state
             const loaded_pull_requests = [];
-            for (const pull_request of filtered_pull_requests) {
-              const loaded_pull_request = await github.rest.pulls.get({
-                owner: context.repo.owner,
-                repo: context.repo.repo,
-                pull_number: pull_request.number,
-              });
-              loaded_pull_requests.push(loaded_pull_request.data);
+            let done = false;
+            let attempts = 0;
+            while (!done && attempts < 3) {
+              for (const pull_request of filtered_pull_requests) {
+                const loaded_pull_request = await github.rest.pulls.get({
+                  owner: context.repo.owner,
+                  repo: context.repo.repo,
+                  pull_number: pull_request.number,
+                });
+                if (loaded_pull_request.data.mergeable != null) {
+                  loaded_pull_requests.push(loaded_pull_request.data);
+                }
+              }
+              done = filtered_pull_requests.length === loaded_pull_requests.length;
+              attempts++;
+              if (!done) {
+                await (new Promise(resolve => setTimeout(resolve, 500)));
+              }
             }
             console.log("Loaded pull requests:", JSON.stringify(loaded_pull_requests, null, 2));
             
