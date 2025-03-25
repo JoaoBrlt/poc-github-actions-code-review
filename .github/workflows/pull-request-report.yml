@@ -65,7 +65,7 @@ jobs:
                 elements: [
                   {
                     type: "link",
-                    url: pull_request.url,
+                    url: pull_request.html_url,
                     text: pull_request.title,
                   },
                   {
@@ -74,7 +74,7 @@ jobs:
                   },
                   {
                     type: "link",
-                    url: pull_request.user.url,
+                    url: pull_request.user.html_url,
                     text: "@" + pull_request.user.login,
                   },
                 ]
@@ -116,7 +116,7 @@ jobs:
                 elements: [
                   {
                     type: "link",
-                    url: pull_request.url,
+                    url: pull_request.html_url,
                     text: pull_request.title,
                   },
                   {
@@ -125,7 +125,7 @@ jobs:
                   },
                   {
                     type: "link",
-                    url: pull_request.user.url,
+                    url: pull_request.user.html_url,
                     text: "@" + pull_request.user.login,
                   },
                 ]
@@ -167,7 +167,7 @@ jobs:
                 elements: [
                   {
                     type: "link",
-                    url: pull_request.url,
+                    url: pull_request.html_url,
                     text: pull_request.title,
                   },
                   {
@@ -176,7 +176,7 @@ jobs:
                   },
                   {
                     type: "link",
-                    url: pull_request.user.url,
+                    url: pull_request.user.html_url,
                     text: "@" + pull_request.user.login,
                   },
                 ]
