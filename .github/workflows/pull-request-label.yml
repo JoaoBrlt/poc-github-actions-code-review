@@ -50,6 +50,7 @@ jobs:
               repo: context.repo.repo,
               pull_number: pull_request.data.number,
             });
+            console.log("Reviews:", JSON.stringify(reviews, null, 2));
 
             // Get the latest review of each user
             const latest_review_by_user = new Map();
