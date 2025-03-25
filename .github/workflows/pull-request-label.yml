@@ -9,9 +9,9 @@ on:
         required: true
         type: string
 
-  # When a pull request is opened, reopened or the branch is updated
+  # When a pull request is opened, synchronized, reopened, marked as ready for review, converted to draft
   pull_request_target:
-    types: ["opened", "synchronize", "reopened"]
+    types: ["opened", "synchronize", "reopened", "ready_for_review", "converted_to_draft"]
 
   # When a pull request review is submitted, edited, or dismissed
   pull_request_review:
@@ -44,9 +44,32 @@ jobs:
               pull_number: process.env.PULL_REQUEST_NUMBER,
             });
 
-            // Skip if the pull request is a draft
+            // Remove all labels if the pull request is a draft
             if (pull_request.data.draft) {
-              console.log("Skipped pull request because it is a draft.");
+              if (labelNames.includes(process.env.PENDING_REVIEW_LABEL)) {
+                await github.rest.issues.removeLabel({
+                  owner: context.repo.owner,
+                  repo: context.repo.repo,
+                  issue_number: pull_request.data.number,
+                  name: process.env.PENDING_REVIEW_LABEL,
+                });
+              }
+              if (labelNames.includes(process.env.CHANGES_REQUESTED_LABEL)) {
+                await github.rest.issues.removeLabel({
+                  owner: context.repo.owner,
+                  repo: context.repo.repo,
+                  issue_number: pull_request.data.number,
+                  name: process.env.CHANGES_REQUESTED_LABEL,
+                });
+              }
+              if (labelNames.includes(process.env.APPROVED_LABEL)) {
+                await github.rest.issues.removeLabel({
+                  owner: context.repo.owner,
+                  repo: context.repo.repo,
+                  issue_number: pull_request.data.number,
+                  name: process.env.APPROVED_LABEL,
+                });
+              }
               return;
             }
 
@@ -143,6 +166,7 @@ jobs:
             });
             const labelNames = labels.map((label) => label.name);
             
+            // Approved
             if (approved_reviews >= process.env.REQUIRED_REVIEW_APPROVALS && changes_requested_reviews === 0 && unresolved_review_comments === 0) {
                if (labelNames.includes(process.env.PENDING_REVIEW_LABEL)) {
                 await github.rest.issues.removeLabel({
@@ -168,7 +192,10 @@ jobs:
                   labels: [process.env.APPROVED_LABEL],
                 });
               }
-            } else if (changes_requested_reviews > 0 || unresolved_review_comments > 0) {
+            } 
+            
+            // Changes requested
+            else if (changes_requested_reviews > 0 || unresolved_review_comments > 0) {
               console.log("Review: Changes requested");
               if (labelNames.includes(process.env.PENDING_REVIEW_LABEL)) {
                 await github.rest.issues.removeLabel({
@@ -194,7 +221,10 @@ jobs:
                   name: process.env.APPROVED_LABEL,
                 });
               }
-            } else {
+            } 
+            
+            // Pending
+            else {
               console.log("Review: Pending");
               if (!labelNames.includes(process.env.PENDING_REVIEW_LABEL)) {
                 await github.rest.issues.addLabels({
