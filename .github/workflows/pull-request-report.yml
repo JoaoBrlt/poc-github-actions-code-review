@@ -21,28 +21,38 @@ jobs:
           SLACK_WEBHOOK_URL: ${{ secrets.SLACK_WEBHOOK_URL }}
         with:
           script: |
-            // Get all pull requests
+            // Find open pull requests
             const pull_requests = await github.paginate(github.rest.pulls.list, {
               owner: context.repo.owner,
               repo: context.repo.repo,
               state: "open",
               sort: "created",
               direction: "asc",
-            });
+            }).filter((pull_request) => !pull_request.draft);
             console.log("Pull requests:", JSON.stringify(pull_requests, null, 2));
             
-            const non_draft_pull_requests = pull_requests.filter((pull_request) => !pull_request.draft);
+            // Fetch pull requests one by one to get the merge state
+            const loaded_pull_requests = [];
+            for (const pull_request of pull_requests) {
+              const loaded_pull_request = await github.rest.pulls.get({
+                owner: context.repo.owner,
+                repo: context.repo.repo,
+                pull_number: pull_request.number,
+              });
+              loaded_pull_requests.push(loaded_pull_request);
+            }
+            console.log("Loaded pull requests:", JSON.stringify(loaded_pull_requests, null, 2));
             
             // Find pending pull requests
-            const pending_pull_requests = non_draft_pull_requests.filter((pull_request) => pull_request.labels.some((label) => label.name === process.env.PENDING_REVIEW_LABEL));
+            const pending_pull_requests = loaded_pull_requests.filter((pull_request) => pull_request.labels.some((label) => label.name === process.env.PENDING_REVIEW_LABEL));
             console.log("Pending pull requests:", pending_pull_requests);
             
             // Find changes requested pull requests
-            const changes_requested_pull_requests = non_draft_pull_requests.filter((pull_request) => pull_request.labels.some((label) => label.name === process.env.CHANGES_REQUESTED_LABEL));
+            const changes_requested_pull_requests = loaded_pull_requests.filter((pull_request) => pull_request.labels.some((label) => label.name === process.env.CHANGES_REQUESTED_LABEL));
             console.log("Changes requested pull requests:", changes_requested_pull_requests);
         
             // Find approved pull requests
-            const approved_pull_requests = non_draft_pull_requests.filter((pull_request) => pull_request.labels.some((label) => label.name === process.env.APPROVED_LABEL));
+            const approved_pull_requests = loaded_pull_requests.filter((pull_request) => pull_request.labels.some((label) => label.name === process.env.APPROVED_LABEL));
             console.log("Approved pull requests:", approved_pull_requests);
             
             // Build the Slack message
