@@ -44,35 +44,6 @@ jobs:
               pull_number: process.env.PULL_REQUEST_NUMBER,
             });
 
-            // Remove all labels if the pull request is a draft
-            if (pull_request.data.draft) {
-              if (labelNames.includes(process.env.PENDING_REVIEW_LABEL)) {
-                await github.rest.issues.removeLabel({
-                  owner: context.repo.owner,
-                  repo: context.repo.repo,
-                  issue_number: pull_request.data.number,
-                  name: process.env.PENDING_REVIEW_LABEL,
-                });
-              }
-              if (labelNames.includes(process.env.CHANGES_REQUESTED_LABEL)) {
-                await github.rest.issues.removeLabel({
-                  owner: context.repo.owner,
-                  repo: context.repo.repo,
-                  issue_number: pull_request.data.number,
-                  name: process.env.CHANGES_REQUESTED_LABEL,
-                });
-              }
-              if (labelNames.includes(process.env.APPROVED_LABEL)) {
-                await github.rest.issues.removeLabel({
-                  owner: context.repo.owner,
-                  repo: context.repo.repo,
-                  issue_number: pull_request.data.number,
-                  name: process.env.APPROVED_LABEL,
-                });
-              }
-              return;
-            }
-
             // Get pull request reviews
             const reviews = await github.paginate(github.rest.pulls.listReviews, {
               owner: context.repo.owner,
@@ -166,6 +137,35 @@ jobs:
             });
             const labelNames = labels.map((label) => label.name);
             
+            // Draft
+            if (pull_request.data.draft) {
+              if (labelNames.includes(process.env.PENDING_REVIEW_LABEL)) {
+                await github.rest.issues.removeLabel({
+                  owner: context.repo.owner,
+                  repo: context.repo.repo,
+                  issue_number: pull_request.data.number,
+                  name: process.env.PENDING_REVIEW_LABEL,
+                });
+              }
+              if (labelNames.includes(process.env.CHANGES_REQUESTED_LABEL)) {
+                await github.rest.issues.removeLabel({
+                  owner: context.repo.owner,
+                  repo: context.repo.repo,
+                  issue_number: pull_request.data.number,
+                  name: process.env.CHANGES_REQUESTED_LABEL,
+                });
+              }
+              if (labelNames.includes(process.env.APPROVED_LABEL)) {
+                await github.rest.issues.removeLabel({
+                  owner: context.repo.owner,
+                  repo: context.repo.repo,
+                  issue_number: pull_request.data.number,
+                  name: process.env.APPROVED_LABEL,
+                });
+              }
+              return;
+            }
+            
             // Approved
             if (approved_reviews >= process.env.REQUIRED_REVIEW_APPROVALS && changes_requested_reviews === 0 && unresolved_review_comments === 0) {
                if (labelNames.includes(process.env.PENDING_REVIEW_LABEL)) {
@@ -192,10 +192,11 @@ jobs:
                   labels: [process.env.APPROVED_LABEL],
                 });
               }
+              return;
             } 
             
             // Changes requested
-            else if (changes_requested_reviews > 0 || unresolved_review_comments > 0) {
+            if (changes_requested_reviews > 0 || unresolved_review_comments > 0) {
               console.log("Review: Changes requested");
               if (labelNames.includes(process.env.PENDING_REVIEW_LABEL)) {
                 await github.rest.issues.removeLabel({
@@ -221,33 +222,32 @@ jobs:
                   name: process.env.APPROVED_LABEL,
                 });
               }
+              return;
             } 
             
             // Pending
-            else {
-              console.log("Review: Pending");
-              if (!labelNames.includes(process.env.PENDING_REVIEW_LABEL)) {
-                await github.rest.issues.addLabels({
-                  owner: context.repo.owner,
-                  repo: context.repo.repo,
-                  issue_number: pull_request.data.number,
-                  labels: [process.env.PENDING_REVIEW_LABEL],
-                });
-              }
-              if (labelNames.includes(process.env.CHANGES_REQUESTED_LABEL)) {
-                await github.rest.issues.removeLabel({
-                  owner: context.repo.owner,
-                  repo: context.repo.repo,
-                  issue_number: pull_request.data.number,
-                  name: process.env.CHANGES_REQUESTED_LABEL,
-                });
-              }
-              if (labelNames.includes(process.env.APPROVED_LABEL)) {
-                await github.rest.issues.removeLabel({
-                  owner: context.repo.owner,
-                  repo: context.repo.repo,
-                  issue_number: pull_request.data.number,
-                  name: process.env.APPROVED_LABEL,
-                });
-              }
+            console.log("Review: Pending");
+            if (!labelNames.includes(process.env.PENDING_REVIEW_LABEL)) {
+              await github.rest.issues.addLabels({
+                owner: context.repo.owner,
+                repo: context.repo.repo,
+                issue_number: pull_request.data.number,
+                labels: [process.env.PENDING_REVIEW_LABEL],
+              });
+            }
+            if (labelNames.includes(process.env.CHANGES_REQUESTED_LABEL)) {
+              await github.rest.issues.removeLabel({
+                owner: context.repo.owner,
+                repo: context.repo.repo,
+                issue_number: pull_request.data.number,
+                name: process.env.CHANGES_REQUESTED_LABEL,
+              });
+            }
+            if (labelNames.includes(process.env.APPROVED_LABEL)) {
+              await github.rest.issues.removeLabel({
+                owner: context.repo.owner,
+                repo: context.repo.repo,
+                issue_number: pull_request.data.number,
+                name: process.env.APPROVED_LABEL,
+              });
             }
