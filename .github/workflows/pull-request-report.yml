@@ -48,7 +48,7 @@ jobs:
               type: "section",
               text: {
                 type: "mrkdwn",
-                text: ":loudspeaker: *Daily Code Review Recap* :loudspeaker:"
+                text: ":loudspeaker: *Code Review Recap* :loudspeaker:"
               }
             });
             blocks.push({
@@ -64,9 +64,19 @@ jobs:
                 type: "rich_text_section",
                 elements: [
                   {
-                    type: "text",
+                    type: "link",
+                    url: pull_request.url,
                     text: pull_request.title,
-                  }
+                  },
+                  {
+                    "type": "text",
+                    "text": " - by "
+                  },
+                  {
+                    type: "link",
+                    url: pull_request.user.url,
+                    text: "@" + pull_request.user.login,
+                  },
                 ]
               });
             }
@@ -105,9 +115,19 @@ jobs:
                 type: "rich_text_section",
                 elements: [
                   {
-                    type: "text",
+                    type: "link",
+                    url: pull_request.url,
                     text: pull_request.title,
-                  }
+                  },
+                  {
+                    "type": "text",
+                    "text": " - by "
+                  },
+                  {
+                    type: "link",
+                    url: pull_request.user.url,
+                    text: "@" + pull_request.user.login,
+                  },
                 ]
               });
             }
@@ -146,9 +166,19 @@ jobs:
                 type: "rich_text_section",
                 elements: [
                   {
-                    type: "text",
+                    type: "link",
+                    url: pull_request.url,
                     text: pull_request.title,
-                  }
+                  },
+                  {
+                    "type": "text",
+                    "text": " - by "
+                  },
+                  {
+                    type: "link",
+                    url: pull_request.user.url,
+                    text: "@" + pull_request.user.login,
+                  },
                 ]
               });
             }
