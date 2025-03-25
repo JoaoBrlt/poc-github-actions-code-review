@@ -66,7 +66,7 @@ jobs:
                   {
                     type: "link",
                     url: pull_request.html_url,
-                    text: pull_request.title,
+                    text: pull_request.title + "(#" + pull_request.number + ")",
                   },
                   {
                     "type": "text",
@@ -117,7 +117,7 @@ jobs:
                   {
                     type: "link",
                     url: pull_request.html_url,
-                    text: pull_request.title,
+                    text: pull_request.title + "(#" + pull_request.number + ")",
                   },
                   {
                     "type": "text",
@@ -168,7 +168,7 @@ jobs:
                   {
                     type: "link",
                     url: pull_request.html_url,
-                    text: pull_request.title,
+                    text: pull_request.title + "(#" + pull_request.number + ")",
                   },
                   {
                     "type": "text",
