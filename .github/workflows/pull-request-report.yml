@@ -41,7 +41,7 @@ jobs:
                 repo: context.repo.repo,
                 pull_number: pull_request.number,
               });
-              loaded_pull_requests.push(loaded_pull_request);
+              loaded_pull_requests.push(loaded_pull_request.data);
             }
             console.log("Loaded pull requests:", JSON.stringify(loaded_pull_requests, null, 2));
             
