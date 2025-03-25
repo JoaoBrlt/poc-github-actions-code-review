@@ -44,6 +44,11 @@ jobs:
               pull_number: process.env.PULL_REQUEST_NUMBER,
             });
 
+            // Skip if the pull request is in draft
+            if (pull_request.draft) {
+              return;
+            }
+
             // Get pull request reviews
             const reviews = await github.paginate(github.rest.pulls.listReviews, {
               owner: context.repo.owner,
